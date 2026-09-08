@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:latest
+    container-name: postgres-allforum
+    environment:
+      POSTGRES_USER: the-ultimate-admin
+      POSTGRES_PASSWORD: n0T(g)N7@G()3S&<=67
+      POSTGRES_DB: allforum
+    ports:
+      - '5432': '5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes: postgres_data

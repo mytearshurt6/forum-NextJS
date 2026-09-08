@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  username          String?   @unique
+  passwordHash      String    @map("password_hash")
+  profilePicture    String?   @map("profile_picture")
+  emailVerified     DateTime? @map("email_verified") @db.Timestamptz(3)
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz(3)
+  isActive          Boolean   @default(true) @map("is_active")
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  role                 UserRole          @default(USER)
+  posts                Post[]
+  comments             Comment[]
+  postVotes            PostVote[]
+  commentVotes         CommentVote[]
+  communityMemberships CommunityMember[]
+  ownCommunities       Community[]
+  sessions             Session[]
+  postReports          PostReport[]
+  commentReports       CommentReport[]
+  communityReports     CommunityReport[]
+  userReportsMade      UserReport[]      @relation("UserReportReporter")
+  userReportsReceived  UserReport[]      @relation("UserReportReported")
+
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Community {
+  id          String            @id @default(uuid())
+  name        String
+  slug        String
+  category    String
+  description String?
+  creatorId   String            @map("creator_id")
+  creator     User              @relation(fields: [creatorId], references: [id])
+  posts       Post[]
+  members     CommunityMember[]
+  reports     CommunityReport[]
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  @@map("communities")
+}
+
+model CommunityMember {
+  communityId String     @map("community_id")
+  userId      String     @map("user_id")
+  role        MemberRole @default(MEMBER)
+  joinedAt    DateTime   @default(now()) @map("joined_at") @db.Timestamptz(3)
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([communityId, userId])
+  @@index([userId])
+  @@map("community_members")
+}
+
+enum MemberRole {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
+
+model Post {
+  id          String           @id @default(uuid())
+  title       String
+  content     String
+  slug        String
+  authorId    String           @map("author_id")
+  communityId String           @map("community_id")
+  author      User             @relation(fields: [authorId], references: [id])
+  community   Community        @relation(fields: [communityId], references: [id])
+  attachments PostAttachment[]
+  comments    Comment[]
+  votes       PostVote[]
+  reports     PostReport[]
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(3)
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([authorId])
+  @@map("posts")
+}
+
+model PostAttachment {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([postId])
+  @@map("post_attachments")
+}
+
+model CommentAttachment {
+  id        String   @id @default(uuid())
+  commentId String   @map("comment_id")
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([commentId])
+  @@map("comment_attachments")
+}
+
+model Comment {
+  id          String              @id @default(uuid())
+  content     String
+  postId      String              @map("post_id")
+  authorId    String              @map("author_id")
+  parentId    String?             @map("parent_id")
+  post        Post                @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User                @relation(fields: [authorId], references: [id])
+  parent      Comment?            @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull) // the same as reddit, removed comments still have their replies
+  attachments CommentAttachment[]
+  votes       CommentVote[]
+  replies     Comment[]           @relation("CommentReplies")
+  reports     CommentReport[]
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime?           @map("deleted_at") @db.Timestamptz(3)
+
+  @@index([postId, parentId, createdAt(sort: Desc)])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model PostVote {
+  id        String   @id @default(uuid())
+  value     Int // 1 or -1
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("post_votes")
+}
+
+model CommentVote {
+  id        String   @id @default(uuid())
+  value     Int
+  userId    String   @map("user_id")
+  commentId String   @map("comment_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@map("comment_votes")
+}
+
+model PostReport {
+  id         String       @id @default(uuid())
+  reporterId String       @map("reporter_id")
+  postId     String       @map("post_id")
+  reason     String?
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  reporter User @relation(fields: [reporterId], references: [id])
+  post     Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, postId])
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("post_reports")
+}
+
+model CommentReport {
+  id         String       @id @default(uuid())
+  reporterId String       @map("reporter_id")
+  commentId  String       @map("comment_id")
+  reason     String?
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  reporter User    @relation(fields: [reporterId], references: [id])
+  comment  Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, commentId])
+  @@index([commentId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("comment_reports")
+}
+
+model CommunityReport {
+  id          String       @id @default(uuid())
+  reporterId  String       @map("reporter_id")
+  communityId String       @map("community_id")
+  reason      String?
+  status      ReportStatus @default(OPEN)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  reporter  User      @relation(fields: [reporterId], references: [id])
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, communityId])
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("community_reports")
+}
+
+model UserReport {
+  id             String       @id @default(uuid())
+  reporterId     String       @map("reporter_id")
+  reportedUserId String       @map("reported_user_id")
+  reason         String?
+  status         ReportStatus @default(OPEN)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  reporter     User @relation("UserReportReporter", fields: [reporterId], references: [id])
+  reportedUser User @relation("UserReportReported", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, reportedUserId])
+  @@index([reportedUserId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("user_reports")
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+model Session {
+  id            String         @id @default(uuid())
+  userId        String         @map("user_id")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent     String?        @map("user_agent")
+  ipAddress     String?        @map("ip_address")
+  expiresAt     DateTime       @map("expires_at") @db.Timestamptz(3) // absolute session expiry
+  revokedAt     DateTime?      @map("revoked_at") @db.Timestamptz(3) // if not null, session is dead
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  sessionId String    @map("session_id")
+  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([sessionId, expiresAt])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+//2 FK @@unique
