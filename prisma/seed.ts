@@ -1,5 +1,5 @@
-import { prisma } from '../src/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { prisma } from '../src/lib/prisma'
 
 async function main() {
   console.log('Clearing existing data...')
@@ -16,14 +16,10 @@ async function main() {
   await prisma.post.deleteMany()
   await prisma.communityMember.deleteMany()
   await prisma.community.deleteMany()
-  await prisma.refreshToken.deleteMany()
-  await prisma.session.deleteMany()
-  await prisma.emailVerificationToken.deleteMany()
-  await prisma.passwordResetToken.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('Seeding users...')
-  const passwordHash = await bcrypt.hash('password123', 10)
+  const passwordHash = await bcrypt.hash('password123', 12)
 
   const admin = await prisma.user.create({
     data: {
@@ -31,10 +27,7 @@ async function main() {
       username: 'admin',
       passwordHash,
       profilePicture: 'https://i.pravatar.cc/150?img=1',
-      emailVerified: new Date(),
-      passwordChangedAt: new Date(),
       role: 'ADMIN',
-      isActive: true,
     },
   })
 
@@ -44,10 +37,7 @@ async function main() {
       username: 'moderator',
       passwordHash,
       profilePicture: 'https://i.pravatar.cc/150?img=2',
-      emailVerified: new Date(),
-      passwordChangedAt: new Date(),
       role: 'USER',
-      isActive: true,
     },
   })
 
@@ -57,10 +47,7 @@ async function main() {
       username: 'user1',
       passwordHash,
       profilePicture: 'https://i.pravatar.cc/150?img=3',
-      emailVerified: new Date(),
-      passwordChangedAt: new Date(),
       role: 'USER',
-      isActive: true,
     },
   })
 
@@ -70,10 +57,7 @@ async function main() {
       username: 'user2',
       passwordHash,
       profilePicture: 'https://i.pravatar.cc/150?img=4',
-      emailVerified: new Date(),
-      passwordChangedAt: new Date(),
       role: 'USER',
-      isActive: true,
     },
   })
 
@@ -83,10 +67,7 @@ async function main() {
       username: 'user3',
       passwordHash,
       profilePicture: 'https://i.pravatar.cc/150?img=5',
-      emailVerified: new Date(),
-      passwordChangedAt: new Date(),
       role: 'USER',
-      isActive: true,
     },
   })
 
@@ -337,24 +318,6 @@ async function main() {
       reportedUserId: user2.id,
       reason: 'Harassment',
       status: 'OPEN',
-    },
-  })
-
-  console.log('Seeding session and refresh token (for admin)...')
-  const session = await prisma.session.create({
-    data: {
-      userId: admin.id,
-      userAgent: 'Mozilla/5.0',
-      ipAddress: '127.0.0.1',
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    },
-  })
-
-  await prisma.refreshToken.create({
-    data: {
-      sessionId: session.id,
-      tokenHash: await bcrypt.hash('dummy-refresh-token', 10),
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   })
 

@@ -1,14 +1,41 @@
+import { LogOutButton } from '@/components/log-out-button'
 import { Button } from '@/components/ui/button'
-import { TypographyH1 } from '@/components/ui/typography-h1'
-import { TypographyH3 } from '@/components/ui/typography-h3'
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { getCurrentUser } from '@/features/auth/utils/getCurrentUser'
+import Link from 'next/link'
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser({ withFullUser: true, redirectIfNotFound: true })
+
   return (
     <div>
       <main>
-        <TypographyH1>Hello World</TypographyH1>
-        <TypographyH3>Hello World</TypographyH3>
-        <Button variant="default">Click me</Button>
+        {!user ? (
+          <div className="flex gap-4">
+            <Button variant="outline">
+              <Link href="/login">Login</Link>
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </div>
+        ) : (
+          <Card className="max-w-[500px] mt-4">
+            <CardHeader>
+              <CardTitle>User: {user.username}</CardTitle>
+              <CardDescription>Role: {user.role}</CardDescription>
+            </CardHeader>
+            <CardFooter className="flex gap-4">
+              <Button variant="outline">
+                <Link href="/private">Private page</Link>
+              </Button>
+              {user.role === 'ADMIN' && (
+                <Button variant="outline">
+                  <Link href="/admin">Admin page</Link>
+                </Button>
+              )}
+              <LogOutButton />
+            </CardFooter>
+          </Card>
+        )}
       </main>
     </div>
   )

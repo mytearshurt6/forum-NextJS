@@ -11,16 +11,13 @@ CREATE TYPE "ReportStatus" AS ENUM ('OPEN', 'RESOLVED', 'DISMISSED');
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "username" TEXT,
+    "username" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
     "profile_picture" TEXT,
-    "email_verified" TIMESTAMPTZ(3),
-    "password_changed_at" TIMESTAMPTZ(3),
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "deleted_at" TIMESTAMPTZ(3),
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL,
+    "deleted_at" TIMESTAMPTZ(3),
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -32,7 +29,7 @@ CREATE TABLE "communities" (
     "slug" TEXT NOT NULL,
     "category" TEXT NOT NULL,
     "description" TEXT,
-    "creator_id" TEXT NOT NULL,
+    "creator_id" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
@@ -56,7 +53,7 @@ CREATE TABLE "posts" (
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "author_id" TEXT NOT NULL,
+    "author_id" TEXT,
     "community_id" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL,
@@ -94,7 +91,7 @@ CREATE TABLE "comments" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "post_id" TEXT NOT NULL,
-    "author_id" TEXT NOT NULL,
+    "author_id" TEXT,
     "parent_id" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL,
@@ -130,7 +127,7 @@ CREATE TABLE "comment_votes" (
 -- CreateTable
 CREATE TABLE "post_reports" (
     "id" TEXT NOT NULL,
-    "reporter_id" TEXT NOT NULL,
+    "reporter_id" TEXT,
     "post_id" TEXT NOT NULL,
     "reason" TEXT,
     "status" "ReportStatus" NOT NULL DEFAULT 'OPEN',
@@ -143,7 +140,7 @@ CREATE TABLE "post_reports" (
 -- CreateTable
 CREATE TABLE "comment_reports" (
     "id" TEXT NOT NULL,
-    "reporter_id" TEXT NOT NULL,
+    "reporter_id" TEXT,
     "comment_id" TEXT NOT NULL,
     "reason" TEXT,
     "status" "ReportStatus" NOT NULL DEFAULT 'OPEN',
@@ -156,7 +153,7 @@ CREATE TABLE "comment_reports" (
 -- CreateTable
 CREATE TABLE "community_reports" (
     "id" TEXT NOT NULL,
-    "reporter_id" TEXT NOT NULL,
+    "reporter_id" TEXT,
     "community_id" TEXT NOT NULL,
     "reason" TEXT,
     "status" "ReportStatus" NOT NULL DEFAULT 'OPEN',
@@ -169,7 +166,7 @@ CREATE TABLE "community_reports" (
 -- CreateTable
 CREATE TABLE "user_reports" (
     "id" TEXT NOT NULL,
-    "reporter_id" TEXT NOT NULL,
+    "reporter_id" TEXT,
     "reported_user_id" TEXT NOT NULL,
     "reason" TEXT,
     "status" "ReportStatus" NOT NULL DEFAULT 'OPEN',
@@ -188,46 +185,8 @@ CREATE TABLE "sessions" (
     "expires_at" TIMESTAMPTZ(3) NOT NULL,
     "revoked_at" TIMESTAMPTZ(3),
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ(3) NOT NULL,
 
     CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "refresh_tokens" (
-    "id" TEXT NOT NULL,
-    "session_id" TEXT NOT NULL,
-    "token_hash" TEXT NOT NULL,
-    "expires_at" TIMESTAMPTZ(3) NOT NULL,
-    "used_at" TIMESTAMPTZ(3),
-    "revoked_at" TIMESTAMPTZ(3),
-    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "password_reset_tokens" (
-    "id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
-    "token_hash" TEXT NOT NULL,
-    "expires_at" TIMESTAMPTZ(3) NOT NULL,
-    "used_at" TIMESTAMPTZ(3),
-    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "password_reset_tokens_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "email_verification_tokens" (
-    "id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
-    "token_hash" TEXT NOT NULL,
-    "expires_at" TIMESTAMPTZ(3) NOT NULL,
-    "used_at" TIMESTAMPTZ(3),
-    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "email_verification_tokens_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -311,35 +270,8 @@ CREATE INDEX "sessions_user_id_expires_at_idx" ON "sessions"("user_id", "expires
 -- CreateIndex
 CREATE INDEX "sessions_expires_at_idx" ON "sessions"("expires_at");
 
--- CreateIndex
-CREATE UNIQUE INDEX "refresh_tokens_token_hash_key" ON "refresh_tokens"("token_hash");
-
--- CreateIndex
-CREATE INDEX "refresh_tokens_session_id_expires_at_idx" ON "refresh_tokens"("session_id", "expires_at");
-
--- CreateIndex
-CREATE INDEX "refresh_tokens_expires_at_idx" ON "refresh_tokens"("expires_at");
-
--- CreateIndex
-CREATE UNIQUE INDEX "password_reset_tokens_token_hash_key" ON "password_reset_tokens"("token_hash");
-
--- CreateIndex
-CREATE INDEX "password_reset_tokens_user_id_expires_at_idx" ON "password_reset_tokens"("user_id", "expires_at");
-
--- CreateIndex
-CREATE INDEX "password_reset_tokens_expires_at_idx" ON "password_reset_tokens"("expires_at");
-
--- CreateIndex
-CREATE UNIQUE INDEX "email_verification_tokens_token_hash_key" ON "email_verification_tokens"("token_hash");
-
--- CreateIndex
-CREATE INDEX "email_verification_tokens_user_id_expires_at_idx" ON "email_verification_tokens"("user_id", "expires_at");
-
--- CreateIndex
-CREATE INDEX "email_verification_tokens_expires_at_idx" ON "email_verification_tokens"("expires_at");
-
 -- AddForeignKey
-ALTER TABLE "communities" ADD CONSTRAINT "communities_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "communities" ADD CONSTRAINT "communities_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "community_members" ADD CONSTRAINT "community_members_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -348,10 +280,10 @@ ALTER TABLE "community_members" ADD CONSTRAINT "community_members_community_id_f
 ALTER TABLE "community_members" ADD CONSTRAINT "community_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "posts" ADD CONSTRAINT "posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "posts" ADD CONSTRAINT "posts_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "posts" ADD CONSTRAINT "posts_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "posts" ADD CONSTRAINT "posts_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "post_attachments" ADD CONSTRAINT "post_attachments_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -363,7 +295,7 @@ ALTER TABLE "comment_attachments" ADD CONSTRAINT "comment_attachments_comment_id
 ALTER TABLE "comments" ADD CONSTRAINT "comments_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "comments" ADD CONSTRAINT "comments_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "comments" ADD CONSTRAINT "comments_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "comments" ADD CONSTRAINT "comments_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "comments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -381,25 +313,25 @@ ALTER TABLE "comment_votes" ADD CONSTRAINT "comment_votes_user_id_fkey" FOREIGN 
 ALTER TABLE "comment_votes" ADD CONSTRAINT "comment_votes_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "post_reports" ADD CONSTRAINT "post_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "post_reports" ADD CONSTRAINT "post_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "post_reports" ADD CONSTRAINT "post_reports_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "comment_reports" ADD CONSTRAINT "comment_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "comment_reports" ADD CONSTRAINT "comment_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "comment_reports" ADD CONSTRAINT "comment_reports_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "community_reports" ADD CONSTRAINT "community_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "community_reports" ADD CONSTRAINT "community_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "community_reports" ADD CONSTRAINT "community_reports_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reporter_id_fkey" FOREIGN KEY ("reporter_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reported_user_id_fkey" FOREIGN KEY ("reported_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -407,28 +339,18 @@ ALTER TABLE "user_reports" ADD CONSTRAINT "user_reports_reported_user_id_fkey" F
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_session_id_fkey" FOREIGN KEY ("session_id") REFERENCES "sessions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "email_verification_tokens" ADD CONSTRAINT "email_verification_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-
-
--- Allow community names to be reused after soft deletion
+-- Enforce unique community names among active communities
 CREATE UNIQUE INDEX communities_name_unique_active
-ON communities (name)
+ON communities (LOWER(name))
 WHERE deleted_at IS NULL;
 
--- Allow community slugs to be reused after soft deletion
+-- Enforce unique community slugs among active communities
 CREATE UNIQUE INDEX communities_slug_unique_active
 ON communities (slug)
 WHERE deleted_at IS NULL;
 
--- Allow post slugs to be reused after soft deletion
+-- Enforce unique post slugs among active posts
 CREATE UNIQUE INDEX posts_slug_unique_active
 ON posts (slug)
 WHERE deleted_at IS NULL;
