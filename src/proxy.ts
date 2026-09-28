@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromSession, updateUserSessionExpiration } from './features/auth/utils/session'
 
+const authRoutes = ['/login', '/signup']
 const privateRoutes = ['/private']
 const adminRoutes = ['/admin']
 
@@ -19,16 +20,25 @@ export async function proxy(request: NextRequest) {
 }
 
 async function proxyAuth(request: NextRequest) {
-  if (privateRoutes.includes(request.nextUrl.pathname)) {
-    const user = await getUserFromSession()
-    if (!user) return NextResponse.redirect(new URL('/login', request.url))
+  const path = request.nextUrl.pathname
+  const isAuthRoute = authRoutes.includes(path)
+  const isPrivateRoute = privateRoutes.includes(path)
+  const isAdminRoute = adminRoutes.includes(path)
+  if (!isAuthRoute && !isPrivateRoute && !isAdminRoute) return
+
+  const user = await getUserFromSession()
+
+  if (isPrivateRoute || isAdminRoute) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    if (isAdminRoute && user.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
   }
 
-  if (adminRoutes.includes(request.nextUrl.pathname)) {
-    const user = await getUserFromSession()
-    if (!user) return NextResponse.redirect(new URL('/login', request.url))
-    //does this redirect load the page? i guess not, cuz it's a proxy
-    if (user.role !== 'ADMIN') return NextResponse.redirect(new URL('/', request.url))
+  if (isAuthRoute && user) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 }
 
@@ -38,7 +48,5 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
-    // Always run for Clerk-specific frontend API routes
-    '/__clerk/(.*)',
   ],
 }

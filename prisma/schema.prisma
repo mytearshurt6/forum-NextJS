@@ -40,16 +40,17 @@ enum UserRole {
 }
 
 model Community {
-  id          String            @id @default(uuid())
-  name        String
-  slug        String
-  category    String
-  description String?
-  creatorId   String?           @map("creator_id")
-  creator     User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  posts       Post[]
-  members     CommunityMember[]
-  reports     CommunityReport[]
+  id            String            @id @default(uuid())
+  name          String
+  slug          String
+  category      String
+  description   String?
+  communityLogo String            @map("community_logo")
+  creatorId     String?           @map("creator_id")
+  creator       User?             @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  posts         Post[]
+  members       CommunityMember[]
+  reports       CommunityReport[]
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)

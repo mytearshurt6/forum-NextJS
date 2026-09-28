@@ -8,10 +8,7 @@ import { createSession } from '../utils/session'
 
 export type SignUpState = { error: string }
 
-export async function signUpAction(
-  // _prevState: SignUpState | null,
-  formData: FormData,
-): Promise<SignUpState> {
+export async function signUpAction(formData: FormData): Promise<SignUpState> {
   const parsed = signUpServerSchema.safeParse({
     username: formData.get('username'),
     email: formData.get('email'),
@@ -49,16 +46,16 @@ export async function signUpAction(
       select: { id: true, role: true },
     })
 
-    // const headerList = await headers()
+    // TODO: const headerList = await headers()
 
     await createSession(
       user,
-      // userAgent: headerList.get('user-agent'),
-      // ipAddress: headerList.get('x-forwarded-for'),
+      // TODO: userAgent: headerList.get('user-agent'),
+      // TODO: ipAddress: headerList.get('x-forwarded-for'),
     )
   } catch {
     return { error: 'Could not create account. Try again.' }
   }
 
-  redirect('/')
+  redirect('/') // TODO: either redirect to login, or log in the user authomatically
 }

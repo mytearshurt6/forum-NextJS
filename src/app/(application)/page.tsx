@@ -5,19 +5,12 @@ import { getCurrentUser } from '@/features/auth/utils/getCurrentUser'
 import Link from 'next/link'
 
 export default async function Home() {
-  const user = await getCurrentUser({ withFullUser: true, redirectIfNotFound: true })
+  const user = await getCurrentUser({ withFullUser: true })
 
   return (
-    <div>
-      <main>
-        {!user ? (
-          <div className="flex gap-4">
-            <Button variant="outline">
-              <Link href="/login">Login</Link>
-              <Link href="/signup">Sign Up</Link>
-            </Button>
-          </div>
-        ) : (
+    <div className="flex min-h-screen items-center justify-center">
+      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center py-32 px-16">
+        {user && (
           <Card className="max-w-[500px] mt-4">
             <CardHeader>
               <CardTitle>User: {user.username}</CardTitle>

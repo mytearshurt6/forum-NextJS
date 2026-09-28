@@ -13,10 +13,7 @@ const loignSchema = z.object({
 
 export type LoginState = { error: string }
 
-export async function loginAction(
-  // _prevState: SignUpState | null,
-  formData: FormData,
-): Promise<LoginState> {
+export async function loginAction(formData: FormData): Promise<LoginState> {
   const parsed = loignSchema.safeParse({
     identifier: formData.get('identifier'),
     password: formData.get('password'),
@@ -40,6 +37,7 @@ export async function loginAction(
   const isCorrectPassword = await verifyPassword(password, user.passwordHash)
   if (!isCorrectPassword) return { error: 'Invalid credentials' }
 
+  //TODO: 2:09(do i need try/catch for this?)
   await createSession(user)
 
   redirect('/')

@@ -78,6 +78,7 @@ async function main() {
       slug: 'technology',
       category: 'Tech',
       description: 'All about technology, programming, and gadgets.',
+      communityLogo: 'https://i.pravatar.cc/150?img=1',
       creatorId: admin.id,
     },
   })
@@ -88,6 +89,7 @@ async function main() {
       slug: 'gaming',
       category: 'Gaming',
       description: 'Discuss games, consoles, and PC gaming.',
+      communityLogo: 'https://i.pravatar.cc/150?img=1',
       creatorId: user1.id,
     },
   })
@@ -98,6 +100,7 @@ async function main() {
       slug: 'science',
       category: 'Science',
       description: 'Explore science, space, and nature.',
+      communityLogo: 'https://i.pravatar.cc/150?img=1',
       creatorId: moderator.id,
     },
   })

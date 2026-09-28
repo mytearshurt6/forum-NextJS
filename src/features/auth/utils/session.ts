@@ -1,4 +1,4 @@
-import 'server-only' // why(forgot)
+import 'server-only'
 import { cookies } from 'next/headers'
 import { SESSION_COOKIE, SESSION_TTL } from '../constants'
 import { UserRole } from '@/generated/prisma/enums'
@@ -29,7 +29,7 @@ const sessionSchema = z.object({
 type UserSession = z.infer<typeof sessionSchema>
 
 export async function createSession(user: UserSession) {
-  const sessionId = crypto.randomBytes(512).toString('hex').normalize()
+  const sessionId = crypto.randomBytes(32).toString('hex').normalize()
 
   //better than plain db cuz auto-deletes on expiry
   await redisClient.set(`session:${sessionId}`, sessionSchema.parse(user), {
@@ -103,4 +103,4 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE)
 }
 
-//fix the function namings
+// TODO: fix the function namings
