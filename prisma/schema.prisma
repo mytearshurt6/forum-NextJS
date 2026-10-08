@@ -80,18 +80,20 @@ enum MemberRole {
 }
 
 model Post {
-  id          String           @id @default(uuid())
-  title       String
-  content     String
-  slug        String
-  authorId    String?          @map("author_id")
-  communityId String           @map("community_id")
-  author      User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  community   Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  attachments PostAttachment[]
-  comments    Comment[]
-  votes       PostVote[]
-  reports     PostReport[]
+  id            String           @id @default(uuid())
+  title         String
+  content       String
+  slug          String
+  authorId      String?          @map("author_id")
+  communityId   String           @map("community_id")
+  upvoteCount   Int              @default(0) @map("upvote_count")
+  downvoteCount Int              @default(0) @map("downvote_count")
+  author        User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  community     Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  attachments   PostAttachment[]
+  comments      Comment[]
+  votes         PostVote[]
+  reports       PostReport[]
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)

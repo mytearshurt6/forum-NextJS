@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { LogoutButton } from './logout-button'
-import { buttonVariants } from './ui/button'
+//TODO: IDK whether this should sit in header folder or not, maybe i'm gonna use this elsewhere
+import { LogoutButton } from '@/app/(application)/components/logout-button'
+import { buttonVariants } from '../ui/button'
 
 type Props = {
   user: {

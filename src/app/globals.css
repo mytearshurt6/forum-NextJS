@@ -81,6 +81,9 @@
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* Custom */
+  --header-height: 72px;
 }
 
 .dark {
@@ -130,5 +133,34 @@
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .scrollbar-on-hover {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-on-hover:hover {
+    scrollbar-color: var(--accent) transparent;
+  }
+
+  .scrollbar-on-hover::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-on-hover::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-on-hover::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .scrollbar-on-hover:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.4);
   }
 }

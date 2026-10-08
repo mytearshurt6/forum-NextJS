@@ -8,7 +8,7 @@ export async function Header() {
   const user = await getCurrentUser()
 
   return (
-    <header className="h-18 w-full mx-auto flex justify-between items-center p-4 border-b-1">
+    <header className="fixed top-0 z-9999 h-18 w-full mx-auto flex justify-between items-center gap-3 p-2 sm:p-4 border-b bg-background">
       <Link href="/" aria-label="Home">
         <Image src="/logo.svg" alt="" width={32} height={32} priority />
       </Link>

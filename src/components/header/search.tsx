@@ -4,7 +4,7 @@ import { Search as SearchIcon } from 'lucide-react'
 
 export function Search() {
   return (
-    <div className="flex-1 max-w-md">
+    <div className="flex-1 min-w-0 max-w-md">
       <form role="search" className="mx-auto w-full max-w-md">
         <label htmlFor="search" className="sr-only">
           Search
@@ -14,7 +14,7 @@ export function Search() {
             type="search"
             id="search"
             placeholder="Search"
-            className="h-10 pl-5 pr-20 rounded-2xl"
+            className="h-10 pl-5 rounded-2xl"
             required
           />
           <Button
