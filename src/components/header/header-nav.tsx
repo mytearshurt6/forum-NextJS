@@ -22,14 +22,16 @@ export function AccountNavigation({ user }: Props) {
         ) : (
           <>
             <li>
-              <Link href="/login" className={`h-10 px-5 ${buttonVariants({ variant: 'outline' })}`}>
+              <Link
+                href="/login"
+                className={`h-10 sm:px-5 px-3 ${buttonVariants({ variant: 'outline' })}`}>
                 Log in
               </Link>
             </li>
             <li>
               <Link
                 href="/signup"
-                className={`h-10 px-5 ${buttonVariants({ variant: 'outline' })}`}>
+                className={`h-10 sm:px-5 px-3 ${buttonVariants({ variant: 'outline' })}`}>
                 Sign up
               </Link>
             </li>

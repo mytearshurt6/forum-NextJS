@@ -42,7 +42,7 @@ export function PostList({
   }, [cursor, isPending, communityId])
 
   return (
-    <div className="w-full">
+    <div className="flex-1">
       <div className="flex flex-col gap-1">
         {posts.map((post, index) => (
           <Fragment key={post.id}>

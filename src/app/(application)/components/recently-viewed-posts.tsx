@@ -10,7 +10,7 @@ export async function RecentlyViewedPosts() {
 
   return (
     <aside
-      className={`hidden lg:flex none sticky top-(--header-height) min-w-0 w-120 max-w-80 ${user ? 'h-[calc(100dvh-var(--header-height))]' : ''} border rounded-lg flex flex-col`}>
+      className={`hidden lg:flex none sticky top-(--header-height) min-w-0 w-80 max-w-80 ${user ? 'h-[calc(100dvh-var(--header-height))]' : ''} border rounded-lg flex flex-col`}>
       <div className="flex justify-between items-center px-8 py-4">
         <TypographyH3>RECENT POSTS</TypographyH3>
         <ClearPostHistoryButton />
